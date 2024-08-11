@@ -100,7 +100,7 @@ fn setup(
     // Health
     commands.spawn(Sprite3dBundle {
         material: health_mat.clone(),
-        transform: Transform::from_xyz(0.0, 64.0, 0.0),
+        transform: Transform::from_xyz(0.0*64.0, 64.0, 0.0),
         ..default()
     });
 
@@ -111,7 +111,7 @@ fn setup(
             ..default()
         },
         material: health_mat.clone(),
-        transform: Transform::from_xyz(64.0, 64.0, 0.0),
+        transform: Transform::from_xyz(1.0*64.0, 64.0, 0.0),
         ..default()
     });
 
@@ -122,10 +122,23 @@ fn setup(
             ..default()
         },
         material: health_mat.clone(),
-        transform: Transform::from_xyz(128.0, 64.0, 0.0),
+        transform: Transform::from_xyz(2.0*64.0, 64.0, 0.0),
         ..default()
     });
+
+        // Health flipped
+        commands.spawn(Sprite3dBundle {
+            sprite3d: Sprite3d {
+                flip_x: false,
+                flip_y: true,
+                ..default()
+            },
+            material: health_mat.clone(),
+            transform: Transform::from_xyz(3.0*64.0, 64.0, 0.0),
+            ..default()
+        });
     
+    // Light
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 5_000.0,
@@ -133,6 +146,8 @@ fn setup(
         },
         ..default()
     });
+
+    // Camera
     commands.spawn(
         (
             Camera3dBundle {

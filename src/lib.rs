@@ -199,7 +199,7 @@ fn submit_sprite(
     let tl = transf.transform_point3a(Vec3A::new(-hsize.x, hsize.y, 0.0) + offset);
     let norm = (br - bl).cross(tl - bl).normalize();
     
-    let (bl_uv, br_uv, tr_uv, tl_uv) = match sprite.rect {
+    let (mut bl_uv, mut br_uv, mut tr_uv, mut tl_uv) = match sprite.rect {
         Some(rect) => {
             (
                 [rect.min.x*isize.x, rect.max.y*isize.y],
@@ -210,6 +210,14 @@ fn submit_sprite(
         },
         None => ([0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]),
     };
+    if sprite.flip_x {
+        std::mem::swap(&mut tl_uv[0], &mut tr_uv[0]);
+        std::mem::swap(&mut bl_uv[0], &mut br_uv[0]);
+    }
+    if sprite.flip_y {
+        std::mem::swap(&mut tl_uv[1], &mut bl_uv[1]);
+        std::mem::swap(&mut tr_uv[1], &mut br_uv[1]);
+    }
 
     let mesh_positions = match mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
         Some(VertexAttributeValues::Float32x3(values)) => values,
