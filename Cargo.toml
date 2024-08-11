@@ -1,0 +1,13 @@
+[package]
+name = "bevy_mod_sprite3d"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.14", features = ["dynamic_linking"] }
+
+[dev-dependencies]
+bevy_flycam = "0.14"
+
+[profile.dev.package."*"]
+opt-level = 3
