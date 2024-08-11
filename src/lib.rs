@@ -1,12 +1,20 @@
 use std::marker::PhantomData;
 
-use bevy::math::Vec3A;
-use bevy::prelude::*;
-use bevy::render::mesh::{Indices, PrimitiveTopology, VertexAttributeValues};
-use bevy::render::render_asset::RenderAssetUsages;
-use bevy::render::view::VisibilitySystems;
-use bevy::sprite::Anchor;
-use bevy::utils::HashMap;
+use bevy_math::{Rect, Vec2, Vec3A};
+use bevy_render::mesh::{Indices, PrimitiveTopology, VertexAttributeValues};
+use bevy_render::render_asset::RenderAssetUsages;
+use bevy_render::view::VisibilitySystems;
+use bevy_utils::HashMap;
+
+use bevy_color::prelude::*;
+use bevy_ecs::prelude::*;
+use bevy_app::prelude::*;
+use bevy_render::prelude::*;
+use bevy_pbr::prelude::*;
+use bevy_sprite::Anchor;
+use bevy_transform::prelude::*;
+use bevy_asset::prelude::*;
+use bevy_reflect::prelude::*;
 
 /// Adds the ability to render sprites in a 3D space.
 pub struct Sprite3dPlugin<M: SizedMaterial = StandardMaterial> {

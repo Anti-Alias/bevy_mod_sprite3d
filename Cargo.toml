@@ -4,9 +4,21 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bevy_ecs = "0.14"
+bevy_app = "0.14"
+bevy_math = "0.14"
+bevy_color = "0.14"
+bevy_render = "0.14"
+bevy_asset = "0.14"
+bevy_pbr = "0.14"
+bevy_sprite = "0.14"
+bevy_utils = "0.14"
+bevy_transform = "0.14"
+bevy_reflect = "0.14"
 bevy = { version = "0.14", features = ["dynamic_linking"] }
 
 [dev-dependencies]
+bevy = { version = "0.14", features = ["dynamic_linking"] }
 bevy_flycam = "0.14"
 
 [profile.dev.package."*"]
