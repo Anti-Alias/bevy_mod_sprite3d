@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use bevy_math::{Rect, Vec2, Vec3A};
 use bevy_render::mesh::{Indices, PrimitiveTopology, VertexAttributeValues};
+use bevy_render::primitives::Aabb;
 use bevy_render::render_asset::RenderAssetUsages;
 use bevy_render::view::VisibilitySystems;
 use bevy_utils::HashMap;
@@ -97,6 +98,11 @@ pub struct Sprite3d {
     pub anchor: Anchor,
 }
 
+/// Maps materials to spawned meshes.
+/// Each mesh acts as a "sprite batch" for all entities using the same material.
+/// For instance, say a scene has:
+///     P players using the same material material (player_material.png),
+///     E enemies using the same material (enemy_material.png), the batch will have mesh entries.
 #[derive(Resource, Reflect, Debug)]
 struct MeshBatch<M: SizedMaterial> {
     meshes: HashMap<Handle<M>, (Entity, Handle<Mesh>)>,
@@ -133,20 +139,26 @@ impl<M: SizedMaterial> MeshBatch<M> {
             _ => sprite_mat_size,
         };
 
-        // Gets mesh associated with sprite's material, or creates it on the fly.
-        let (_mesh_entity, mesh_handle) = self.meshes
+        // Gets existing mesh (sprite batch) associated with sprite's material.
+        // Creates and spawns it on-the-fly if there's no entry.
+        let (_, mesh_handle) = self.meshes
             .entry(sprite_mat_handle.clone_weak())
             .or_insert_with(|| {
-                let mesh_handle = meshes.add(create_mesh());
-                let mesh_entity = commands.spawn(MaterialMeshBundle {
-                    mesh: mesh_handle.clone(),
+                let handle = meshes.add(create_mesh());
+                let bundle = MaterialMeshBundle {
+                    mesh: handle.clone(),
                     material: sprite_mat_handle.clone_weak(),
                     ..Default::default()
-                }).id();
-                (mesh_entity, mesh_handle)
-
+                };
+                let entity = commands.spawn((
+                    bundle,
+                    Aabb { center: Vec3A::ZERO, half_extents: Vec3A::INFINITY },
+                )).id();
+                (entity, handle)
             });
-        let mesh = meshes.get_mut(mesh_handle).unwrap();
+        let mesh = meshes
+            .get_mut(mesh_handle)
+            .expect("Sprite batch entity is missing a Handle<Mesh> component");
 
         // Submits sprite vertex data to mesh
         submit_sprite(mesh, sprite, sprite_transf, sprite_mat_size, sprite_size);
