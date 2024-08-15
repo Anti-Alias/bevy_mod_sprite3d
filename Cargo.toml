@@ -15,10 +15,8 @@ bevy_sprite = "0.14"
 bevy_utils = "0.14"
 bevy_transform = "0.14"
 bevy_reflect = "0.14"
-bevy = { version = "0.14", features = ["dynamic_linking"] }
 
 [dev-dependencies]
-bevy = { version = "0.14", features = ["dynamic_linking"] }
 bevy_flycam = "0.14"
 
 [profile.dev.package."*"]
