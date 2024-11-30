@@ -2,7 +2,6 @@ use std::f32::consts::{PI, TAU};
 
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy_flycam::prelude::*;
 use bevy_mod_sprite3d::{Sprite3d, Sprite3dBundle, Sprite3dPlugin};
 
 fn main() {
@@ -10,12 +9,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             Sprite3dPlugin::<StandardMaterial>::default(),
-            NoCameraPlayerPlugin,
         ))
-        .insert_resource(MovementSettings {
-            speed: 150.0,
-            ..default()
-        })
         .add_systems(Startup, setup)
         .add_systems(Update, spin)
         .run();
@@ -47,49 +41,56 @@ fn setup(
 
     // Pokey with default size
     commands.spawn(Sprite3dBundle {
-        material: pokey_mat.clone(),
+        sprite3d: Sprite3d {
+            material: pokey_mat.clone(),
+            ..Default::default()
+        },
         ..default()
     });
 
     // Pokey with specific size
     commands.spawn(Sprite3dBundle {
         sprite3d: Sprite3d {
+            material: pokey_mat.clone(),
             custom_size: Some(Vec2::new(10.0, 5.0)),
             ..default()
         },
-        material: pokey_mat.clone(),
         transform: Transform::from_xyz(1.0 * 32.0, 0.0, 0.0),
         ..default()
     });
 
     // Pokey Rotated 45 degrees Z
     commands.spawn(Sprite3dBundle {
-        material: pokey_mat.clone(),
+        sprite3d: Sprite3d {
+            material: pokey_mat.clone(),
+            ..Default::default()
+        },
         transform: Transform::from_xyz(2.0 * 32.0, 0.0, 0.0).with_rotation(Quat::from_rotation_z(PI/4.0)),
         ..default()
     });
 
     // Pokey spinning around center
-    commands.spawn(
-        (
-            Sprite3dBundle {
+    commands.spawn((
+        Sprite3dBundle {
+            sprite3d: Sprite3d {
                 material: pokey_mat.clone(),
-                transform: Transform::from_xyz(3.0 * 32.0, 0.0, 0.0).with_rotation(Quat::from_rotation_y(PI/3.0)),
-                ..default()
+                ..Default::default()
             },
-            Spinner,
-        )
-    );
+            transform: Transform::from_xyz(3.0 * 32.0, 0.0, 0.0).with_rotation(Quat::from_rotation_y(PI/3.0)),
+            ..default()
+        },
+        Spinner,
+    ));
 
     // Pokey spinning around bottom-right
     commands.spawn(
         (
             Sprite3dBundle {
                 sprite3d: Sprite3d {
+                    material: pokey_mat.clone(),
                     anchor: Anchor::BottomRight,
                     ..default()
                 },
-                material: pokey_mat.clone(),
                 transform: Transform::from_xyz(4.0 * 32.0, 0.0, 0.0).with_rotation(Quat::from_rotation_y(PI/3.0)),
                 ..default()
             },
@@ -99,7 +100,10 @@ fn setup(
 
     // Health
     commands.spawn(Sprite3dBundle {
-        material: health_mat.clone(),
+        sprite3d: Sprite3d {
+            material: health_mat.clone(),
+            ..Default::default()
+        },
         transform: Transform::from_xyz(0.0*64.0, 64.0, 0.0),
         ..default()
     });
@@ -107,10 +111,10 @@ fn setup(
     // Health tinted
     commands.spawn(Sprite3dBundle {
         sprite3d: Sprite3d {
+            material: health_mat.clone(),
             color: Color::linear_rgb(1.0, 0.0, 0.0),
             ..default()
         },
-        material: health_mat.clone(),
         transform: Transform::from_xyz(1.0*64.0, 64.0, 0.0),
         ..default()
     });
@@ -118,10 +122,10 @@ fn setup(
     // Health cropped
     commands.spawn(Sprite3dBundle {
         sprite3d: Sprite3d {
+            material: health_mat.clone(),
             rect: Some(Rect::new(10.0, 10.0, 58.0 - 10.0, 52.0 - 10.0)),
             ..default()
         },
-        material: health_mat.clone(),
         transform: Transform::from_xyz(2.0*64.0, 64.0, 0.0),
         ..default()
     });
@@ -129,34 +133,26 @@ fn setup(
         // Health flipped
         commands.spawn(Sprite3dBundle {
             sprite3d: Sprite3d {
+                material: health_mat.clone(),
                 flip_x: false,
                 flip_y: true,
                 ..default()
             },
-            material: health_mat.clone(),
             transform: Transform::from_xyz(3.0*64.0, 64.0, 0.0),
             ..default()
         });
     
     // Light
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: 5_000.0,
-            ..default()
-        },
-        ..default()
+    commands.spawn(DirectionalLight {
+        illuminance: 5_000.0,
+        ..Default::default()
     });
 
     // Camera
-    commands.spawn(
-        (
-            Camera3dBundle {
-                transform: Transform::from_xyz(0.0, 80.0, 200.0).looking_at(Vec3::ZERO, Vec3::Y),
-                ..default()
-            },
-            FlyCam,
-        )
-    );
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 80.0, 200.0).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
 }
 
 fn spin(
@@ -164,7 +160,7 @@ fn spin(
     time: Res<Time>,
 ) {
     for mut transf in &mut spinners {
-        transf.rotate_y(1.0 / 5.0 * TAU * time.delta_seconds());
+        transf.rotate_y(1.0 / 5.0 * TAU * time.delta_secs());
     }
 }
 

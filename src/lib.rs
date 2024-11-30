@@ -10,6 +10,7 @@ use bevy_utils::HashMap;
 use bevy_color::prelude::*;
 use bevy_ecs::prelude::*;
 use bevy_app::prelude::*;
+use bevy_image::prelude::*;
 use bevy_render::prelude::*;
 use bevy_pbr::prelude::*;
 use bevy_sprite::Anchor;
@@ -49,7 +50,7 @@ pub struct Sprite3dSystems;
 
 fn batch_sprites<M: SizedMaterial>(
     mut commands: Commands,
-    mut sprites: Query<(&Sprite3d, &GlobalTransform, &Handle<M>, &InheritedVisibility)>,
+    mut sprites: Query<(&Sprite3d<M>, &GlobalTransform, &InheritedVisibility)>,
     mut mesh_batch: ResMut<MeshBatch<M>>,
     materials: Res<Assets<M>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -62,13 +63,13 @@ fn batch_sprites<M: SizedMaterial>(
     mesh_batch.clear_meshes(&mut meshes);
 
     // Submits sprite data to mesh batch
-    for (sprite, sprite_transf, sprite_mat, sprite_vis) in &mut sprites {
+    for (sprite, sprite_transf, sprite_vis) in &mut sprites {
         let visible = sprite_vis.get();
         if !visible { continue };
         mesh_batch.submit(
             sprite,
             sprite_transf,
-            sprite_mat,
+            &sprite.material,
             &mut meshes,
             &materials, 
             &images,
@@ -79,17 +80,17 @@ fn batch_sprites<M: SizedMaterial>(
 
 #[derive(Bundle, Clone, PartialEq, Default, Debug)]
 pub struct Sprite3dBundle<M: SizedMaterial> {
-    pub sprite3d: Sprite3d,
+    pub sprite3d: Sprite3d<M>,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
-    pub material: Handle<M>,
     pub visibility: Visibility,
     pub inherited_visibility: InheritedVisibility,
     pub view_visibility: ViewVisibility,
 }
 
 #[derive(Component, Reflect, Clone, PartialEq, Default, Debug)]
-pub struct Sprite3d {
+pub struct Sprite3d<M: SizedMaterial> {
+    pub material: Handle<M>,
     pub color: Color,
     pub flip_x: bool,
     pub flip_y: bool,
@@ -121,7 +122,7 @@ impl<M: SizedMaterial> MeshBatch<M> {
     // Adds sprite vertex data to a mesh that is compatible with the sprite's material.
     fn submit(
         &mut self,
-        sprite: &Sprite3d,
+        sprite: &Sprite3d<M>,
         sprite_transf: &GlobalTransform,
         sprite_mat_handle: &Handle<M>,
         meshes: &mut Assets<Mesh>,
@@ -145,13 +146,9 @@ impl<M: SizedMaterial> MeshBatch<M> {
             .entry(sprite_mat_handle.clone_weak())
             .or_insert_with(|| {
                 let handle = meshes.add(create_mesh());
-                let bundle = MaterialMeshBundle {
-                    mesh: handle.clone(),
-                    material: sprite_mat_handle.clone_weak(),
-                    ..Default::default()
-                };
                 let entity = commands.spawn((
-                    bundle,
+                    Mesh3d(handle.clone()),
+                    MeshMaterial3d(sprite_mat_handle.clone()),
                     Aabb { center: Vec3A::ZERO, half_extents: Vec3A::INFINITY },
                 )).id();
                 (entity, handle)
@@ -192,9 +189,9 @@ fn create_mesh() -> Mesh {
     mesh
 }
 
-fn submit_sprite(
+fn submit_sprite<M: SizedMaterial>(
     mesh: &mut Mesh,
-    sprite: &Sprite3d,
+    sprite: &Sprite3d<M>,
     sprite_transf: &GlobalTransform,
     sprite_mat_size: Vec2,
     sprite_size: Vec2,
