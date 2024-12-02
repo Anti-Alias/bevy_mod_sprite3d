@@ -78,17 +78,8 @@ fn batch_sprites<M: SizedMaterial>(
     }
 }
 
-#[derive(Bundle, Clone, PartialEq, Default, Debug)]
-pub struct Sprite3dBundle<M: SizedMaterial> {
-    pub sprite3d: Sprite3d<M>,
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
-    pub visibility: Visibility,
-    pub inherited_visibility: InheritedVisibility,
-    pub view_visibility: ViewVisibility,
-}
-
-#[derive(Component, Reflect, Clone, PartialEq, Default, Debug)]
+#[derive(Component, Reflect, Clone, PartialEq, Debug)]
+#[require(Transform, Visibility, InheritedVisibility, ViewVisibility)]
 pub struct Sprite3d<M: SizedMaterial> {
     pub material: Handle<M>,
     pub color: Color,
@@ -97,6 +88,20 @@ pub struct Sprite3d<M: SizedMaterial> {
     pub custom_size: Option<Vec2>,
     pub rect: Option<Rect>,
     pub anchor: Anchor,
+}
+
+impl<M: SizedMaterial> Default for Sprite3d<M> {
+    fn default() -> Self {
+        Self {
+            material: Default::default(),
+            color: Default::default(),
+            flip_x: Default::default(),
+            flip_y: Default::default(),
+            custom_size: Default::default(),
+            rect: Default::default(),
+            anchor: Default::default(),
+        }
+    }
 }
 
 /// Maps materials to spawned meshes.
