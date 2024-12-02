@@ -50,7 +50,7 @@ pub struct Sprite3dSystems;
 
 fn batch_sprites<M: SizedMaterial>(
     mut commands: Commands,
-    mut sprites: Query<(&Sprite3d<M>, &GlobalTransform, &InheritedVisibility)>,
+    mut sprites: Query<(&Sprite3d, &SpriteMaterial3d<M>, &GlobalTransform, &InheritedVisibility)>,
     mut mesh_batch: ResMut<MeshBatch<M>>,
     materials: Res<Assets<M>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -63,13 +63,13 @@ fn batch_sprites<M: SizedMaterial>(
     mesh_batch.clear_meshes(&mut meshes);
 
     // Submits sprite data to mesh batch
-    for (sprite, sprite_transf, sprite_vis) in &mut sprites {
+    for (sprite, sprite_mat, sprite_transf, sprite_vis) in &mut sprites {
         let visible = sprite_vis.get();
         if !visible { continue };
         mesh_batch.submit(
             sprite,
+            &sprite_mat.0,
             sprite_transf,
-            &sprite.material,
             &mut meshes,
             &materials, 
             &images,
@@ -79,29 +79,17 @@ fn batch_sprites<M: SizedMaterial>(
 }
 
 #[derive(Component, Reflect, Clone, PartialEq, Debug)]
+pub struct SpriteMaterial3d<M: SizedMaterial>(pub Handle<M>);
+
+#[derive(Component, Reflect, Clone, PartialEq, Default, Debug)]
 #[require(Transform, Visibility, InheritedVisibility, ViewVisibility)]
-pub struct Sprite3d<M: SizedMaterial> {
-    pub material: Handle<M>,
+pub struct Sprite3d {
     pub color: Color,
     pub flip_x: bool,
     pub flip_y: bool,
     pub custom_size: Option<Vec2>,
     pub rect: Option<Rect>,
     pub anchor: Anchor,
-}
-
-impl<M: SizedMaterial> Default for Sprite3d<M> {
-    fn default() -> Self {
-        Self {
-            material: Default::default(),
-            color: Default::default(),
-            flip_x: Default::default(),
-            flip_y: Default::default(),
-            custom_size: Default::default(),
-            rect: Default::default(),
-            anchor: Default::default(),
-        }
-    }
 }
 
 /// Maps materials to spawned meshes.
@@ -127,9 +115,9 @@ impl<M: SizedMaterial> MeshBatch<M> {
     // Adds sprite vertex data to a mesh that is compatible with the sprite's material.
     fn submit(
         &mut self,
-        sprite: &Sprite3d<M>,
-        sprite_transf: &GlobalTransform,
+        sprite: &Sprite3d,
         sprite_mat_handle: &Handle<M>,
+        sprite_transf: &GlobalTransform,
         meshes: &mut Assets<Mesh>,
         materials: &Assets<M>,
         images: &Assets<Image>,
@@ -194,9 +182,9 @@ fn create_mesh() -> Mesh {
     mesh
 }
 
-fn submit_sprite<M: SizedMaterial>(
+fn submit_sprite(
     mesh: &mut Mesh,
-    sprite: &Sprite3d<M>,
+    sprite: &Sprite3d,
     sprite_transf: &GlobalTransform,
     sprite_mat_size: Vec2,
     sprite_size: Vec2,
@@ -314,12 +302,8 @@ pub trait SizedMaterial: Material {
 impl SizedMaterial for StandardMaterial {
     /// Attempts to report its size as the size of its base color texture.
     fn size(&self, images: &Assets<Image>) -> Option<Vec2> {
-        match &self.base_color_texture {
-            Some(base_color_texture) => match images.get(base_color_texture) {
-                Some(base_color_texture) => Some(base_color_texture.size_f32()),
-                None => None,
-            },
-            None => None,
-        }
+        let base_color_texture = self.base_color_texture.as_ref()?;
+        let image = images.get(base_color_texture)?;
+        Some(image.size_f32()) 
     }
 }
